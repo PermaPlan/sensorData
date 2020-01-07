@@ -2,20 +2,23 @@ from flask import Flask, jsonify, abort, make_response, request
 from gevent.pywsgi import WSGIServer
 import os 
 import logging
+import time
 
 from log import initialize_logger
 from data_handling import DataHandler
+from database import Database
 
 base_path = os.getcwd()
 initialize_logger('{}/logs'.format(base_path))
 app = Flask(__name__)
 
-data_handler = DataHandler()
+data_handler = DataHandler(base_path)
+
 
 #TODO: Error handler
 
 
-@app.route("/add/sensor-value/", methods=["POST"])
+@app.route("/add/sensor-value", methods=["POST"])
 def add_program():
     logging.debug("POST: add new program")
     if not request.json:
@@ -47,6 +50,19 @@ def get_temperature():
 def get_moisture():
     values = data_handler.get_moisture()
     return make_response(jsonify(values), 200)
+
+
+@app.route("/values/heat_index", methods=["GET"])
+def get_heat_index():
+    values = data_handler.get_heat_index()
+    return make_response(jsonify(values), 200)
+
+
+@app.route("/values/identifiers", methods=["GET"])
+def get_value_identifiers():
+    identifiers = ["humidity", "temperature", "moisture", "heat_index"]
+    return make_response(jsonify(identifiers), 200)
+
 
 
 @app.after_request
