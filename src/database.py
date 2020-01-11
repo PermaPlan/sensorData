@@ -56,7 +56,7 @@ class Database(object):
 
     def get_columns(self, columns):
         cursor, conn = self._get_cursor() 
-        cursor.execute("SELECT {} FROM sensor_data".format(str.join(",", columns)))
+        cursor.execute("SELECT {} FROM sensor_data_aggregated".format(str.join(",", columns)))
         values = []
         for row in cursor.fetchall():
             values.append(row)

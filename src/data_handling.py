@@ -1,5 +1,6 @@
 import time
 import logging
+from utils import median
 
 from database import Database
 
@@ -12,40 +13,47 @@ class DataHandler(object):
         self.db = Database(path)
 
     def add_data(self, data):
+        logging.debug(data)
         if not data:
             return False
-        print(data)
+
         humidity = data["air_humidity"]
         temperature = data["air_temperature"]
         moisture = data["soil_moisture"]
         moisture_analog = data["soil_moisture_analog"]
         heat_index = data["heat_index_C"]  
-        timestamp = time.time()
-        data_point = list(range(1, len(humidity)+1))
-        data_point_max = len(humidity)
+        timestamp = data["timestamp"]
+        max_data_point = len(humidity)
 
         for i in range(len(humidity)):
 
             self.db.add_values(
-                #sensor_id="test", 
+                sensor_id="test", 
                 humidity=humidity[i], 
                 temperature=temperature[i],
                 moisture=moisture[i],
                 moisture_analog=moisture_analog[i],
                 heat_index=heat_index[i],
-                timestamp=time.time(),
-                data_point= i,
-                max_data_point= len(humidity)
+                timestamp=timestamp,
+                data_point=i,
+                max_data_point=max_data_point 
             )
 
-        data_point = data["data_point"]
-        self.max_data_point = data["max_data_point"]
-        self.data[data_point] = data
+        humidity_median = median(humidity)
+        temperature_median = median(temperature)
+        moisture_median = median(moisture)
+        moisture_analog_median = median(moisture_analog)
+        heat_index_median = median(heat_index)
 
-        logging.debug("Received data point {}/{}".format(data_point, self.max_data_point))
-
-        if data_point == self.max_data_point - 1:
-            self._aggregate_batch()
+        self.db.add_aggregated_values(
+            sensor_id="test", 
+            humidity=humidity_median, 
+            temperature=temperature_median, 
+            moisture=moisture_median, 
+            moisture_analog=moisture_analog_median,
+            heat_index=heat_index_median,  
+            timestamp=timestamp
+        )
 
         return True
 
@@ -74,35 +82,3 @@ class DataHandler(object):
             result_dict[column] = result[i]
         
         return result_dict
-
-    def _aggregate_batch(self):
-        logging.info("Aggregate collected batch")
-
-        keys = [
-            "air_humidity",
-            "air_temperature",
-            "soil_moisture",
-            "soil_moisture_analog",
-            "heat_index_C"
-        ]
-        aggregated = {key: 0 for key in keys}
-
-        for data_point in self.data.values():
-            for key in keys:
-                aggregated[key] += data_point[key]
-
-        for key in aggregated:
-            aggregated[key] /= self.max_data_point
-
-        self.db.add_aggregated_values(
-            sensor_id="test", 
-            humidity=aggregated["air_humidity"], 
-            temperature=aggregated["air_temperature"], 
-            moisture=aggregated["soil_moisture"], 
-            moisture_analog=aggregated["soil_moisture_analog"],
-            heat_index=aggregated["heat_index_C"],  
-            timestamp=time.time()
-        )
-
-        self.data = {}
-        self.max_data_point = 0
