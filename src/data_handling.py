@@ -14,18 +14,29 @@ class DataHandler(object):
     def add_data(self, data):
         if not data:
             return False
+        print(data)
+        humidity = data["air_humidity"]
+        temperature = data["air_temperature"]
+        moisture = data["soil_moisture"]
+        moisture_analog = data["soil_moisture_analog"]
+        heat_index = data["heat_index_C"]  
+        timestamp = time.time()
+        data_point = list(range(1, len(humidity)+1))
+        data_point_max = len(humidity)
 
-        self.db.add_values(
-            sensor_id="test", 
-            humidity=data["air_humidity"], 
-            temperature=data["air_temperature"], 
-            moisture=data["soil_moisture"], 
-            moisture_analog=data["soil_moisture_analog"],
-            heat_index=data["heat_index_C"],  
-            timestamp=time.time(),
-            data_point= data["data_point"],
-            max_data_point=data["max_data_point"]
-        )
+        for i in range(len(humidity)):
+
+            self.db.add_values(
+                #sensor_id="test", 
+                humidity=humidity[i], 
+                temperature=temperature[i],
+                moisture=moisture[i],
+                moisture_analog=moisture_analog[i],
+                heat_index=heat_index[i],
+                timestamp=time.time(),
+                data_point= i,
+                max_data_point= len(humidity)
+            )
 
         data_point = data["data_point"]
         self.max_data_point = data["max_data_point"]
