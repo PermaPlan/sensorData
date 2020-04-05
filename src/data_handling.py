@@ -16,14 +16,14 @@ class DataHandler(object):
             return False
 
         self.db.add_values(
-            sensor_id="test", 
-            humidity=data["air_humidity"], 
-            temperature=data["air_temperature"], 
-            moisture=data["soil_moisture"], 
+            sensor_id="test",
+            humidity=data["air_humidity"],
+            temperature=data["air_temperature"],
+            moisture=data["soil_moisture"],
             moisture_analog=data["soil_moisture_analog"],
-            heat_index=data["heat_index_C"],  
+            heat_index=data["heat_index_C"],
             timestamp=time.time(),
-            data_point= data["data_point"],
+            data_point=data["data_point"],
             max_data_point=data["max_data_point"]
         )
 
@@ -31,7 +31,8 @@ class DataHandler(object):
         self.max_data_point = data["max_data_point"]
         self.data[data_point] = data
 
-        logging.debug("Received data point {}/{}".format(data_point, self.max_data_point))
+        logging.debug(
+            "Received data point {}/{}".format(data_point, self.max_data_point))
 
         if data_point == self.max_data_point - 1:
             self._aggregate_batch()
@@ -61,7 +62,7 @@ class DataHandler(object):
         result_dict = {}
         for i, column in enumerate(columns):
             result_dict[column] = result[i]
-        
+
         return result_dict
 
     def _aggregate_batch(self):
@@ -84,12 +85,12 @@ class DataHandler(object):
             aggregated[key] /= self.max_data_point
 
         self.db.add_aggregated_values(
-            sensor_id="test", 
-            humidity=aggregated["air_humidity"], 
-            temperature=aggregated["air_temperature"], 
-            moisture=aggregated["soil_moisture"], 
+            sensor_id="test",
+            humidity=aggregated["air_humidity"],
+            temperature=aggregated["air_temperature"],
+            moisture=aggregated["soil_moisture"],
             moisture_analog=aggregated["soil_moisture_analog"],
-            heat_index=aggregated["heat_index_C"],  
+            heat_index=aggregated["heat_index_C"],
             timestamp=time.time()
         )
 
