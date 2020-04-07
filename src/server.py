@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, abort, make_response, request
 from gevent.pywsgi import WSGIServer
-import os 
+import os
 import logging
 import time
 
@@ -8,6 +8,8 @@ from log import initialize_logger
 from data_handling import DataHandler
 from database import Database
 
+
+print('FUCK YOU')
 base_path = os.getcwd()
 initialize_logger('{}/logs'.format(base_path))
 app = Flask(__name__)
@@ -15,7 +17,7 @@ app = Flask(__name__)
 data_handler = DataHandler(base_path)
 
 
-#TODO: Error handler
+# TODO: Error handler
 
 
 @app.route("/add/sensor-value", methods=["POST"])
@@ -27,7 +29,7 @@ def add_program():
     data = request.json
     logging.debug("New data point: {}".format(data))
     data_stored = data_handler.add_data(data)
-    
+
     if data_stored:
         return make_response(jsonify({"response": "OK"}), 200)
     else:
@@ -64,13 +66,14 @@ def get_value_identifiers():
     return make_response(jsonify(identifiers), 200)
 
 
-
 @app.after_request
 def after_request(response):
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-  return response
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers',
+                         'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods',
+                         'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 
 if __name__ == "__main__":
