@@ -8,5 +8,5 @@ dependencies:
   - pip
   - numpy
   - pip:
-    - flask
-    - gevent
+      - flask
+      - gevent

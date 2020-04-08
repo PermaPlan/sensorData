@@ -1,6 +1,8 @@
 import time
 import logging
+import time
 from utils import median
+
 
 from database import Database
 
@@ -21,22 +23,25 @@ class DataHandler(object):
         temperature = data["air_temperature"]
         moisture = data["soil_moisture"]
         moisture_analog = data["soil_moisture_analog"]
-        heat_index = data["heat_index_C"]  
+        heat_index = data["heat_index_C"]
         timestamp = data["timestamp"]
         max_data_point = len(humidity)
+
+        timestamp, adjusted_timestamp = self._check_timestamp(timestamp)
 
         for i in range(len(humidity)):
 
             self.db.add_values(
-                sensor_id="test", 
-                humidity=humidity[i], 
+                sensor_id="test",
+                humidity=humidity[i],
                 temperature=temperature[i],
                 moisture=moisture[i],
                 moisture_analog=moisture_analog[i],
                 heat_index=heat_index[i],
                 timestamp=timestamp,
                 data_point=i,
-                max_data_point=max_data_point 
+                max_data_point=max_data_point,
+                adjusted_timestamp=adjusted_timestamp
             )
 
         humidity_median = median(humidity)
@@ -46,13 +51,14 @@ class DataHandler(object):
         heat_index_median = median(heat_index)
 
         self.db.add_aggregated_values(
-            sensor_id="test", 
-            humidity=humidity_median, 
-            temperature=temperature_median, 
-            moisture=moisture_median, 
+            sensor_id="test",
+            humidity=humidity_median,
+            temperature=temperature_median,
+            moisture=moisture_median,
             moisture_analog=moisture_analog_median,
-            heat_index=heat_index_median,  
-            timestamp=timestamp
+            heat_index=heat_index_median,
+            timestamp=timestamp,
+            adjusted_timestamp=adjusted_timestamp
         )
 
         return True
@@ -80,5 +86,14 @@ class DataHandler(object):
         result_dict = {}
         for i, column in enumerate(columns):
             result_dict[column] = result[i]
-        
+
         return result_dict
+
+    def _check_timestamp(self, timestamp):
+        now = time.time()
+        if abs(timestamp - now) > 60:
+            logging.debug(
+                "Received wrong timestamp {}. Will be adjusted to {}".format(timestamp, now))
+            return now, True
+
+        return timestamp, False

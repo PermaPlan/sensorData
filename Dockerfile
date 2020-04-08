@@ -7,7 +7,7 @@ COPY environment.yml .
 RUN conda env create -f environment.yml
 
 COPY src ./src
-ADD data.db .
+#ADD data.db .
 RUN mkdir ./logs
 
 EXPOSE 5000

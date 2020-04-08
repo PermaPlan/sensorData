@@ -9,7 +9,6 @@ from data_handling import DataHandler
 from database import Database
 
 
-print('FUCK YOU')
 base_path = os.getcwd()
 initialize_logger('{}/logs'.format(base_path))
 app = Flask(__name__)

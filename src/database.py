@@ -4,15 +4,16 @@ import logging
 import threading
 import json
 
+
 class Database(object):
 
     def __init__(self, path):
         """Connection to database to persist the processing history
-        
+
         Arguments:
             path {str} -- Path to the sqlite-database 
         """
-        
+
         self.path = path + '/data.db'
         self.tables = {
             "sensor_data": {
@@ -25,7 +26,8 @@ class Database(object):
                 "heat_index": "REAL",
                 "timestamp": "REAL",
                 "data_point": "INTEGER",
-                "max_data_point": "INTEGER"
+                "max_data_point": "INTEGER",
+                "timestamp_adjusted": "BOOLEAN"
             },
             "sensor_data_aggregated": {
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
@@ -35,7 +37,8 @@ class Database(object):
                 "moisture": "INTEGER",
                 "moisture_analog": "INTEGER",
                 "heat_index": "REAL",
-                "timestamp": "REAL"
+                "timestamp": "REAL",
+                "timestamp_adjusted": "BOOLEAN"
             }
         }
 
@@ -44,23 +47,26 @@ class Database(object):
         # cursor, conn = self._get_cursor()
         # cursor.execute("CREATE TABLE IF NOT EXISTS sensor_data (id INTEGER PRIMARY KEY AUTOINCREMENT, sensor_id INTEGER, humidity REAL, temperature REAL, moisture INTEGER, moisture_analog INTEGER, heat_index REAL, timestamp REAL);")
 
-    def add_values(self, sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, data_point, max_data_point):
+    def add_values(self, sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, data_point, max_data_point, adjusted_timestamp=False):
         cursor, conn = self._get_cursor()
-        cursor.execute("INSERT INTO sensor_data (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, data_point, max_data_point) VALUES (?,?,?,?,?,?,?,?,?)", (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, data_point, max_data_point))
+        cursor.execute("INSERT INTO sensor_data (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, data_point, max_data_point, timestamp_adjusted) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                       (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, data_point, max_data_point, adjusted_timestamp))
         conn.commit()
 
-    def add_aggregated_values(self, sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp):
+    def add_aggregated_values(self, sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, adjusted_timestamp=False):
         cursor, conn = self._get_cursor()
-        cursor.execute("INSERT INTO sensor_data_aggregated (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp) VALUES (?,?,?,?,?,?,?)", (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp))
+        cursor.execute("INSERT INTO sensor_data_aggregated (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, timestamp_adjusted) VALUES (?,?,?,?,?,?,?,?)",
+                       (sensor_id, humidity, temperature, moisture, moisture_analog, heat_index, timestamp, adjusted_timestamp))
         conn.commit()
 
     def get_columns(self, columns):
-        cursor, conn = self._get_cursor() 
-        cursor.execute("SELECT {} FROM sensor_data_aggregated".format(str.join(",", columns)))
+        cursor, conn = self._get_cursor()
+        cursor.execute("SELECT {} FROM sensor_data_aggregated".format(
+            str.join(",", columns)))
         values = []
         for row in cursor.fetchall():
             values.append(row)
-        
+
         return values
 
     def _create_tables(self, table_schemas):
@@ -115,4 +121,5 @@ class Database(object):
             logging.info("Connected to database under {}".format(self.path))
             return conn.cursor(), conn
         except:
-            logging.error("Could not establish connection to database under {}".format(self.path))
+            logging.error(
+                "Could not establish connection to database under {}".format(self.path))
